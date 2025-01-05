@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width">
+    </head>
+<body>
+    
+    <script>
+        var GlobalCountX = 0;
+
+        const getE = ()=>(document.getElementById("inText"));
+        function clickValUp(){
+            try {
+                const saving = Number(getE().value) + 1;
+                getE().value = saving;
+                localStorage.setItem('save', `${saving}`);
+                document.getElementById("countRan").innerHTML = `C${++GlobalCountX}:${saving}`;
+            } catch (e) {
+                alert(`error ${e}`);
+            }
+        }
+        function clickValDown(){
+            try {
+                const saving = Number(getE().value) - 1;
+                getE().value = saving;
+                localStorage.setItem('save', `${saving}`);
+                document.getElementById("countRan").innerHTML = `C${++GlobalCountX}:${saving}`;
+            } catch (e) {
+                alert(`error ${e}`);
+            }
+        }
+        function clickSave(){
+            try {
+                const saving = getE().value;
+                localStorage.setItem('save', `${saving}`);
+            } catch (e) {
+                alert(`error ${e}`);
+            }
+        }
+    </script>    
+    
+<input type="text" id="inText" name="inText" style="height:50px;font-size:21px;"></input>
+<br/>
+<button onclick="clickValUp()" style="height:40px;font-size:18px;">▲</button>&nbsp;&nbsp;
+<button onclick="clickValDown()" style="height:40px;font-size:18px;">▼</button>&nbsp;&nbsp;
+<br/>
+<button onclick="clickSave()" style="height:40px;font-size:18px;">Save</button>&nbsp;&nbsp;
+<br/>
+<span id="countRan"></span>
+
+<script>
+    const vvv = localStorage.getItem('save');
+    if (vvv !== null) {
+        getE().value = vvv;
+    }
+</script>
+
+</body></html>
+
