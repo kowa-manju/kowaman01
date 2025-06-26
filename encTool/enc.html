@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES-GCM暗号化ツール</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="text"], input[type="password"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            height: 120px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 AES-GCM暗号化ツール</h1>
+        
+        <div class="input-group">
+            <label for="inputText">入力テキスト:</label>
+            <textarea id="inputText" placeholder="暗号化したいテキストを入力してください"></textarea>
+        </div>
+        
+        <div class="input-group">
+            <label for="password">パスワード:</label>
+            <input type="password" id="password" placeholder="暗号化用のパスワードを入力してください">
+        </div>
+        
+        <div class="input-group">
+            <label for="output">暗号化結果 (Base64):</label>
+            <textarea id="output" placeholder="暗号化されたデータがここに表示されます" readonly></textarea>
+        </div>
+        
+        <button id="encryptBtn" onclick="encryptData()">🔒 暗号化実行</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function deriveKey(password, salt) {
+            // パスワードを鍵材料に変換
+            const encoder = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                { name: 'PBKDF2' },
+                false,
+                ['deriveKey']
+            );
+            
+            // PBKDF2を使用して暗号鍵を導出
+            return await crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000, 
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                {
+                    name: 'AES-GCM',
+                    length: 256 // 256bit鍵
+                },
+                false,
+                ['encrypt']
+            );
+        }
+        
+        async function encryptData() {
+            const inputText = document.getElementById('inputText').value;
+            const password = document.getElementById('password').value;
+            const outputElement = document.getElementById('output');
+            const statusElement = document.getElementById('status');
+            const encryptBtn = document.getElementById('encryptBtn');
+            
+            // 入力チェック
+            if (!inputText.trim()) {
+                showStatus('入力テキストを入力してください', 'error');
+                return;
+            }
+            
+            if (!password.trim()) {
+                showStatus('パスワードを入力してください', 'error');
+                return;
+            }
+            
+            try {
+                // ボタンを無効化
+                encryptBtn.disabled = true;
+                encryptBtn.textContent = '暗号化中...';
+                showStatus('暗号化処理中...', 'success');
+                
+                // ランダムソルト生成（16バイト）
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                
+                // ランダムIV生成（12バイト - GCMに推奨）
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                
+                // パスワードから鍵を導出
+                const key = await deriveKey(password, salt);
+                
+                // テキストをエンコード
+                const encoder = new TextEncoder();
+                const data = encoder.encode(inputText);
+                
+                // AES-GCMで暗号化
+                const encryptedData = await crypto.subtle.encrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: iv
+                    },
+                    key,
+                    data
+                );
+                
+                // ソルト + IV + 暗号化データを結合
+                const combined = new Uint8Array(salt.length + iv.length + encryptedData.byteLength);
+                combined.set(salt, 0);
+                combined.set(iv, salt.length);
+                combined.set(new Uint8Array(encryptedData), salt.length + iv.length);
+                
+                // Base64エンコード
+                const base64Result = btoa(String.fromCharCode(...combined));
+                
+                // 結果を表示
+                outputElement.value = base64Result;
+                showStatus('暗号化が完了しました！', 'success');
+                
+            } catch (error) {
+                console.error('暗号化エラー:', error);
+                showStatus('暗号化中にエラーが発生しました: ' + error.message, 'error');
+            } finally {
+                // ボタンを有効化
+                encryptBtn.disabled = false;
+                encryptBtn.textContent = '🔒 暗号化実行';
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = 'status ' + type;
+            
+            // 成功メッセージは3秒後に消す
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusElement.textContent = '';
+                    statusElement.className = '';
+                }, 3000);
+            }
+        }
+        
+        // Enterキーで暗号化実行
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                encryptData();
+            }
+        });
+    </script>
+</body>
+</html>
