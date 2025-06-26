@@ -232,7 +232,7 @@
                 
 
                 document.getElementById("showArea").innerHTML = decryptedText.split(/\r?\n/).map(l => {
-                    const uuu = l.replace(/ /g, '+').replace(/"/g, '%22');
+                    const uuu = l.replace(/ /g, '+').replace(/"/g, '%22').replace(/#/g, '%23');
                     const vvv = l.replace(/ /g, '&nbsp;');
                     return `<br/><a href="https://www.google.com/search?q=${uuu}&ie=UTF-8" target=_blank>${vvv}</a>`;
                 }).join("");
