@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Commit Tool</title>
+    <link rel="stylesheet" href="github-commit-app.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GitHub Commit Tool</h1>
+            <p>Create commits directly to GitHub repositories</p>
+        </header>
+        
+        <form id="commit-form" class="commit-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="repository">Repository Name</label>
+                <input type="text" id="repository" name="repository" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="access-token">Access Token</label>
+                <input type="password" id="access-token" name="access-token" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="base-branch">Base Branch Name</label>
+                <input type="text" id="base-branch" name="base-branch" value="main" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="head-branch">Head Branch Name</label>
+                <input type="text" id="head-branch" name="head-branch" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="commit-message">Commit Message</label>
+                <input type="text" id="commit-message" name="commit-message" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="file-path">File Path</label>
+                <input type="text" id="file-path" name="file-path" placeholder="e.g., src/components/Button.tsx" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="file-content">File Content</label>
+                <textarea id="file-content" name="file-content" rows="10" required></textarea>
+            </div>
+            
+            <button type="submit" class="commit-button">
+                <span class="button-text">コミット</span>
+                <div class="loading-spinner"></div>
+            </button>
+        </form>
+        
+        <div id="result-message" class="result-message"></div>
+    </div>
+    
+    <script src="github-commit-app.bundle.js"></script>
+</body>
+</html>
